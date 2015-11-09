@@ -18,11 +18,12 @@ import org.apache.commons.io.FileUtils;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    ArrayList<String> items;
-    ArrayAdapter<String> itemsAdapter;
+    ArrayList<Item> items;
+    ArrayAdapter<Item> itemsAdapter;
     ListView lvItems;
 
     private final int REQUEST_CODE = 20;
@@ -40,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
         lvItems = (ListView) findViewById(R.id.lvItems);
 
         //init the items ArrayList
-        //items = new ArrayList<>();
+        items = new ArrayList<>();
         readItems();
 
         itemsAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1,items);
@@ -57,9 +58,9 @@ public class MainActivity extends AppCompatActivity {
         lvItems.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener(){
             @Override
             public boolean onItemLongClick(AdapterView<?> adapter, View item, int pos, long id){
-                items.remove(pos);
+                Item removedItem = items.remove(pos);
                 itemsAdapter.notifyDataSetChanged();
-                writeItems();
+                deleteItem(removedItem);
                 return true;
             }
         });
@@ -69,9 +70,9 @@ public class MainActivity extends AppCompatActivity {
             public void onItemClick(AdapterView<?> adapter, View item, int pos, long id) {
                 Intent i = new Intent(MainActivity.this, EditItemActivity.class);
 
-                String itemText=(String)adapter.getItemAtPosition(pos);
+                Item itemToEdit = (Item) adapter.getItemAtPosition(pos);
                 // put "extras" into the bundle for access in the second activity
-                i.putExtra("itemText", itemText);
+                i.putExtra("itemText", itemToEdit.text);
                 i.putExtra("pos", pos);
 
                 startActivityForResult(i, REQUEST_CODE);
@@ -107,19 +108,31 @@ public class MainActivity extends AppCompatActivity {
     public void  onAddItem(View v) {
         EditText etNewItem = (EditText) findViewById(R.id.etNewItem);
         String itemText = etNewItem.getText().toString();
-        itemsAdapter.add(itemText);
+
+        //writeItems();
+        long id = addItem(itemText);
+        Item item = new Item(String.valueOf(id), itemText);
+        itemsAdapter.add(item);
+
         etNewItem.setText("");
-        writeItems();
+
     }
 
     private void readItems() {
-        File filesDir = getFilesDir();
-        File todoFile = new File(filesDir, "items.txt");
-        try {
-            items = new ArrayList<String>(FileUtils.readLines(todoFile));
-        }catch(IOException e) {
-            items = new ArrayList<String>();
+        TodoDBHelper dbHelper = TodoDBHelper.getInstance(this);
+        List<Item> itemList= dbHelper.getAllItems();
+        if(itemList != null) {
+            for(int i = 0; i < itemList.size(); i++) {
+                items.add(itemList.get(i));
+            }
         }
+
+
+    }
+
+    private void deleteItem(Item item) {
+        TodoDBHelper dbHelper = TodoDBHelper.getInstance(this);
+        dbHelper.removeItem(item.id);
     }
 
     private void writeItems() {
@@ -130,6 +143,18 @@ public class MainActivity extends AppCompatActivity {
         } catch(IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private long addItem(String text) {
+
+        TodoDBHelper dbHelperInstance = TodoDBHelper.getInstance(this);
+        return dbHelperInstance.addItem(text);
+    }
+
+    private void updateItem(Item item) {
+        TodoDBHelper dbHelperInstance = TodoDBHelper.getInstance(this);
+        dbHelperInstance.updateItem(item);
+
     }
 
     @Override
@@ -143,10 +168,12 @@ public class MainActivity extends AppCompatActivity {
             // Toast the name to display temporarily on screen
             Toast.makeText(this, editedItemString, Toast.LENGTH_SHORT).show();
 
+            Item editedItem = items.get(pos);
+            editedItem.text = editedItemString;
 
-            items.set(pos, editedItemString);
             itemsAdapter.notifyDataSetChanged();
-            writeItems();
+            updateItem(editedItem);
+            //writeItems();
 
 
         }
