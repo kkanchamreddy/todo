@@ -8,4 +8,5 @@
     <string name="tvEditItem">Edit item below</string>
     <string name="btnSave">Save</string>
     <string name="priority">Priority</string>
+    <string name="tvItemPH">Item</string>
 </resources>
