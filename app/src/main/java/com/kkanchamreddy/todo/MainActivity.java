@@ -9,14 +9,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import org.apache.commons.io.FileUtils;
-
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -74,6 +69,7 @@ public class MainActivity extends AppCompatActivity {
                 // put "extras" into the bundle for access in the second activity
                 i.putExtra("itemText", itemToEdit.text);
                 i.putExtra("pos", pos);
+                i.putExtra("priority", itemToEdit.priority);
 
                 startActivityForResult(i, REQUEST_CODE);
 
@@ -106,15 +102,14 @@ public class MainActivity extends AppCompatActivity {
 
 
     public void  onAddItem(View v) {
-        EditText etNewItem = (EditText) findViewById(R.id.etNewItem);
-        String itemText = etNewItem.getText().toString();
+        Intent i = new Intent(MainActivity.this, EditItemActivity.class);
 
-        //writeItems();
-        long id = addItem(itemText);
-        Item item = new Item(String.valueOf(id), itemText);
-        itemsAdapter.add(item);
 
-        etNewItem.setText("");
+        // put "extras" into the bundle for access in the second activity
+        //i.putExtra("itemText", "New Task");
+        //i.putExtra("priority", "MEDIUM");
+
+        startActivityForResult(i, REQUEST_CODE);
 
     }
 
@@ -135,20 +130,12 @@ public class MainActivity extends AppCompatActivity {
         dbHelper.removeItem(item.id);
     }
 
-    private void writeItems() {
-        File filesDir = getFilesDir();
-        File todoFile = new File(filesDir, "items.txt");
-        try {
-            FileUtils.writeLines(todoFile, items);
-        } catch(IOException e) {
-            e.printStackTrace();
-        }
-    }
 
-    private long addItem(String text) {
+
+    private long addItem(String text, String priority) {
 
         TodoDBHelper dbHelperInstance = TodoDBHelper.getInstance(this);
-        return dbHelperInstance.addItem(text);
+        return dbHelperInstance.addItem(text, priority);
     }
 
     private void updateItem(Item item) {
@@ -162,17 +149,28 @@ public class MainActivity extends AppCompatActivity {
 
         if (resultCode == RESULT_OK && requestCode == REQUEST_CODE) {
             // Extract name value from result extras
-            String editedItemString = data.getExtras().getString("editedItem");
+            String itemText = data.getExtras().getString("editedItem");
+            String priority = data.getExtras().getString("priority");
             int pos = data.getExtras().getInt("pos");
 
             // Toast the name to display temporarily on screen
-            Toast.makeText(this, editedItemString, Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, itemText, Toast.LENGTH_SHORT).show();
+            if(pos > -1) {
+                Item editedItem = items.get(pos);
+                editedItem.text = itemText;
+                editedItem.priority = priority;
 
-            Item editedItem = items.get(pos);
-            editedItem.text = editedItemString;
+                itemsAdapter.notifyDataSetChanged();
+                updateItem(editedItem);
+            } else {
+                long id = addItem(itemText, priority);
+                Item newItem = new Item(String.valueOf(id), itemText, priority );
+                itemsAdapter.add(newItem);
+                //itemsAdapter.notifyDataSetChanged();
+            }
 
-            itemsAdapter.notifyDataSetChanged();
-            updateItem(editedItem);
+
+
             //writeItems();
 
 

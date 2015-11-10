@@ -25,6 +25,7 @@ public class TodoDBHelper extends SQLiteOpenHelper {
     // Item Table Columns
     private static final String KEY_ITEM_ID = "id";
     private static final String KEY_ITEM_TEXT = "text";
+    private static final String KEY_ITEM_PRIORITY = "priority";
 
     private static TodoDBHelper sInstance;
 
@@ -63,7 +64,9 @@ public class TodoDBHelper extends SQLiteOpenHelper {
                 "(" +
                 KEY_ITEM_ID + " INTEGER PRIMARY KEY," + // Define a primary key
 
-                KEY_ITEM_TEXT + " TEXT" +
+                KEY_ITEM_TEXT + " TEXT," +
+
+                KEY_ITEM_PRIORITY + " TEXT" +
                 ")";
 
 
@@ -85,7 +88,8 @@ public class TodoDBHelper extends SQLiteOpenHelper {
 
 
     // Insert an item into the database
-    public long addItem(String text) {
+    public long addItem(String text, String priority) {
+
         long id = -1;
         // Create and/or open the database for writing
         SQLiteDatabase db = getWritableDatabase();
@@ -98,6 +102,7 @@ public class TodoDBHelper extends SQLiteOpenHelper {
 
             ContentValues values = new ContentValues();
             values.put(KEY_ITEM_TEXT, text);
+            values.put(KEY_ITEM_PRIORITY, priority);
 
             // Notice how we haven't specified the primary key. SQLite auto increments the primary key column.
             id = db.insertOrThrow(TABLE_TODO_ITEMS, null, values);
@@ -130,7 +135,9 @@ public class TodoDBHelper extends SQLiteOpenHelper {
                 do {
                     String itemId = cursor.getString(cursor.getColumnIndex(KEY_ITEM_ID));
                     String text = cursor.getString(cursor.getColumnIndex(KEY_ITEM_TEXT));
-                    Item newItem = new Item(itemId, text);
+                    String priority = cursor.getString(cursor.getColumnIndex(KEY_ITEM_PRIORITY));
+System.out.println("Got Item-----" + text);
+                    Item newItem = new Item(itemId, text, priority);
                     //newItem.text = cursor.getString(cursor.getColumnIndex(KEY_ITEM_TEXT),cursor.getColumnIndex(KEY_ITEM_TEXT));
                     items.add(newItem);
                 } while(cursor.moveToNext());

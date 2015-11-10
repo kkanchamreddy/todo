@@ -7,4 +7,5 @@
     <string name="title_activity_edit_item">EditItemActivity</string>
     <string name="tvEditItem">Edit item below</string>
     <string name="btnSave">Save</string>
+    <string name="priority">Priority</string>
 </resources>

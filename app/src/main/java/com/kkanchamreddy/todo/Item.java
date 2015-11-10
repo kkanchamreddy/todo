@@ -6,10 +6,12 @@ package com.kkanchamreddy.todo;
 public class Item {
     public String text;
     public String id;
+    public String priority;
 
-    public Item(String id, String text) {
+    public Item(String id, String text, String priority) {
         this.id = id;
         this.text = text;
+        this.priority = priority;
     }
 
     @Override
